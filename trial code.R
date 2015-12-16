@@ -26,9 +26,18 @@ unzip(fileDest)
 # unlink(temp)
 
 # read in and check the data
-data <- read.csv("activity.csv")
+library(dplyr)
+data <- tbl_df(read.csv("activity.csv", stringsAsFactors = FALSE))
 head(data)
 str(data)
+View(data)
+fix(data)
+
+
+
+
+
+
 
 # number and proportion of complete cases
 sum(complete.cases(data))
@@ -45,7 +54,7 @@ sum(duplicated(data))
 sum(data$steps < 0, na.rm = TRUE)
 
 # create new variables
-library(dplyr)
+# library(dplyr)
 data <- mutate(data, Date = as.Date(date)) %>%
         mutate(DayOfWeek = factor(weekdays(Date),
                 levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
@@ -53,6 +62,18 @@ data <- mutate(data, Date = as.Date(date)) %>%
 data$WeekDay[which(data$DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu", "Fri"))] <- "Weekday"
 data$WeekDay[which(data$DayOfWeek %in% c("Sat", "Sun"))] <- "Weekend"
 
+
+library(stringr)
+data$time <- str_pad(data$interval, width = 4, "left", pad = "0")
+data$date.time <- paste(data$date, data$time, sep = " ")
+library(lubridate)
+data$date.time <- ymd_hm(data$date.time)
+data <- mutate(data, sequence = 1:nrow(data))
+# data$date.time.lt <- as.POSIXlt(data$date.time)
+# data$date.time.list <- unclass(data$date.time.lt)
+# p <- data$date.time.list["min"]
+# class(p)
+# ?POSIX.lt()
 # DailySteps <- group_by(data, Date)
 # MeanDailySteps <- summarise(DailySteps,
 #                             Total_Steps = sum(steps, na.rm = TRUE),
@@ -87,15 +108,18 @@ interval_Data <- group_by(data, interval) %>%
 # Daily_Profile <- ts(interval_Data)
 # plot(Daily_Profile)
 
+library(ggplot2)
+
+# plot(interval_Data$time, interval_Data$Mean_Steps)
 qplot(interval, Mean_Steps, data = interval_Data,
       geom = "line",
       # colour= WeekDay,
       main = "Time series of mean number of steps over 24 hours")
 
-# find time interval with highest mean number of steps (2:00 pm)
+# find time interval with highest mean number of steps
 max_activity <- interval_Data$interval[which(interval_Data$Mean_Steps == 
                                         max(interval_Data$Mean_Steps))]
-(round(max_activity / 60, 0))
+print(str_pad(max_activity, width = 4, "left", pad = "0"))
 
 # plot NAs by date and identify which days are missing
 dailyNAs <- group_by(data, Date) %>%
@@ -114,27 +138,35 @@ unique(missing_data$DayOfWeek)
 
 
 
-boxplot(steps ~ DayOfWeek, 
-        data = data,
-        ylab = "Steps",
-        xlab = "Day of Week")
-title(main = "Number of Steps by Day of Week")
-
-boxplot(steps ~ factor(WeekDay), 
-        data = data,
-        ylab = "Steps",
-        xlab = "Weekday")
-title(main = "Number of Steps by Weekday")
+# boxplot(steps ~ DayOfWeek, 
+#         data = data,
+#         ylab = "Steps",
+#         xlab = "Day of Week")
+# title(main = "Number of Steps by Day of Week")
+# 
+# boxplot(steps ~ factor(WeekDay), 
+#         data = data,
+#         ylab = "Steps",
+#         xlab = "Weekday")
+# title(main = "Number of Steps by Weekday")
 
 
 library(reshape2)
 # select out complete cases
 complete_data <- data[which(complete.cases(data)), ]
+
+# wide_date <- acast(complete_data, interval ~ date, value.var = "steps")
+# wide_DayOfWeek <- acast(complete_data, interval ~ DayOfWeek,
+#                         value.var = "steps", fun.aggregate = sum)
+# wide_WeekDay <- acast(complete_data, interval ~ WeekDay,
+#                         value.var = "steps", fun.aggregate = sum)
+
+
 wide_date <- acast(complete_data, interval ~ date, value.var = "steps")
 wide_DayOfWeek <- acast(complete_data, interval ~ DayOfWeek,
                         value.var = "steps", fun.aggregate = sum)
 wide_WeekDay <- acast(complete_data, interval ~ WeekDay,
-                        value.var = "steps", fun.aggregate = sum)
+                      value.var = "steps", fun.aggregate = sum)
 
 # plot time series
 Day_Of_Week <- ts(wide_DayOfWeek)

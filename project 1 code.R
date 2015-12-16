@@ -9,7 +9,7 @@ download.file(dataset_url, fileDest, mode = "wb", method = "libcurl")
 unzip(fileDest)
 
 # read in and check the data
-data <- read.csv("activity.csv")
+data <- tbl_df(read.csv("activity.csv"))
 head(data)
 str(data)
 
@@ -66,6 +66,21 @@ data <- mutate(data, Date = as.Date(date)) %>%
 data$WeekDay[which(data$DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu", "Fri"))] <- "Weekday"
 data$WeekDay[which(data$DayOfWeek %in% c("Sat", "Sun"))] <- "Weekend"
 
+library(stringr)
+data$time <- str_pad(data$interval, width = 4, "left", pad = "0")
+data$date.time <- paste(data$date, data$time, sep = " ")
+library(lubridate)
+data$date.time <- ymd_hm(data$date.time)
+data <- mutate(data, sequence = 1:nrow(data))
+
+
+
+
+
+
+
+
+
 # plot the total daily steps
 dailyData <- group_by(data, Date) %>%
         summarise(Total_Steps = sum(steps, na.rm = TRUE)) %>%
@@ -98,8 +113,7 @@ qplot(interval, Mean_Steps, data = interval_Data,
 which(interval_Data$Mean_Steps == max(interval_Data$Mean_Steps))
 max_activity <- interval_Data$interval[which(interval_Data$Mean_Steps == 
                                                      max(interval_Data$Mean_Steps))]
-# find time with highest mean number of steps (2:00 pm)
-(round(max_activity / 60, 0))
+print(str_pad(max_activity, width = 4, "left", pad = "0"))
 
 # data exploration for imputation
 # number of NAs
