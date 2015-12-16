@@ -83,8 +83,8 @@ or from the course GitHub site.</p>
 The variables included in this dataset are:<br />
 * steps: number of steps taking in a 5-min interval (missing values coded as NA)<br />
 * date: date on which the measurement was taken in YYYY-MM-DD format<br />
-* interval: identifier for the 5-minute interval in which measurement was taken<br />
-—</p>
+* interval: identifier for the 5-minute interval in which measurement was taken.</p>
+<hr />
 </div>
 </div>
 <div id="analysis" class="section level1">
@@ -211,7 +211,7 @@ data$date.time &lt;- ymd_hm(data$date.time)</code></pre>
 </div>
 <div id="plot-and-calculate-various-parameters" class="section level3">
 <h3>Plot and calculate various parameters</h3>
-<p>Plot the total daily steps:</p>
+<p>Plot the total daily steps (<em>this is a histogram, type ‘h’</em>):</p>
 <pre class="r"><code>dailyData &lt;- group_by(data, Date) %&gt;%
         summarise(Total_Steps = sum(steps, na.rm = TRUE)) %&gt;%
         plot(type = &quot;h&quot;,
@@ -232,14 +232,8 @@ print(summaryData1)</code></pre>
 ##   Grand_Total_Steps Average_Steps Median_Steps
 ##               (int)         (dbl)        (dbl)
 ## 1            570608         10766        10765</code></pre>
-<pre class="r"><code>xt1 &lt;- xtable(summaryData1)
-print(xt1, type = &quot;html&quot;)</code></pre>
-<pre><code>## &lt;!-- html table generated in R 3.2.1 by xtable 1.8-0 package --&gt;
-## &lt;!-- Wed Dec 16 20:51:50 2015 --&gt;
-## &lt;table border=1&gt;
-## &lt;tr&gt; &lt;th&gt;  &lt;/th&gt; &lt;th&gt; Grand_Total_Steps &lt;/th&gt; &lt;th&gt; Average_Steps &lt;/th&gt; &lt;th&gt; Median_Steps &lt;/th&gt;  &lt;/tr&gt;
-##   &lt;tr&gt; &lt;td align=&quot;right&quot;&gt; 1 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 570608 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 10766.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 10765.00 &lt;/td&gt; &lt;/tr&gt;
-##    &lt;/table&gt;</code></pre>
+<pre class="r"><code># xt1 &lt;- xtable(summaryData1)
+# print(xt1, type = &quot;html&quot;)</code></pre>
 <p>Calculate and plot the mean number of steps per interval:</p>
 <pre class="r"><code>interval_Data &lt;- group_by(data, interval) %&gt;%
         select(steps) %&gt;%
@@ -253,14 +247,14 @@ qplot(interval, Mean_Steps, data = interval_Data,
 <pre><code>## [1] 104</code></pre>
 <pre class="r"><code>max_activity &lt;- interval_Data$interval[which(interval_Data$Mean_Steps == 
                                                      max(interval_Data$Mean_Steps))]
-print(str_pad(max_activity, width = 4, &quot;left&quot;, pad = &quot;0&quot;))</code></pre>
-<pre><code>## [1] &quot;0835&quot;</code></pre>
+max_activity &lt;- (str_pad(max_activity, width = 4, &quot;left&quot;, pad = &quot;0&quot;))</code></pre>
+<p>The time of maximum activity is 0835.</p>
 </div>
 <div id="impute-missing-values" class="section level3">
 <h3>Impute missing values</h3>
 <p>Number of missing values (NAs):</p>
-<pre class="r"><code>sum(is.na(data$steps))</code></pre>
-<pre><code>## [1] 2304</code></pre>
+<pre class="r"><code>tot_nas &lt;- sum(is.na(data$steps))</code></pre>
+<p>There are 2304 missing values.</p>
 <p>Pattern of missing values:</p>
 <pre class="r"><code>dailyNAs &lt;- group_by(data, Date) %&gt;%
         summarise(NAs = sum(is.na(steps)))
@@ -352,14 +346,8 @@ print(summaryData2)</code></pre>
 ##   Grand_Total_Steps Average_Steps Median_Steps
 ##               (dbl)         (dbl)        (dbl)
 ## 1            582382          9547        10395</code></pre>
-<pre class="r"><code>xt2 &lt;- xtable(summaryData2)
-print(xt2, type = &quot;html&quot;)</code></pre>
-<pre><code>## &lt;!-- html table generated in R 3.2.1 by xtable 1.8-0 package --&gt;
-## &lt;!-- Wed Dec 16 20:51:52 2015 --&gt;
-## &lt;table border=1&gt;
-## &lt;tr&gt; &lt;th&gt;  &lt;/th&gt; &lt;th&gt; Grand_Total_Steps &lt;/th&gt; &lt;th&gt; Average_Steps &lt;/th&gt; &lt;th&gt; Median_Steps &lt;/th&gt;  &lt;/tr&gt;
-##   &lt;tr&gt; &lt;td align=&quot;right&quot;&gt; 1 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 582382.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 9547.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 10395.00 &lt;/td&gt; &lt;/tr&gt;
-##    &lt;/table&gt;</code></pre>
+<pre class="r"><code># xt2 &lt;- xtable(summaryData2)
+# print(xt2, type = &quot;html&quot;)</code></pre>
 <p>Compare grand total, mean and median steps with original and imputed data:</p>
 <pre class="r"><code>summaryData3 &lt;- rbind(summaryData1, summaryData2)
 row.names(summaryData3) &lt;- c(&quot;Original data (excl days with zero steps)&quot;, &quot;Imputed data&quot;)
@@ -370,15 +358,8 @@ print(summaryData3)</code></pre>
 ##               (dbl)         (dbl)        (dbl)
 ## 1            570608         10766        10765
 ## 2            582382          9547        10395</code></pre>
-<pre class="r"><code>xt3 &lt;- xtable(summaryData3)
-print(xt3, type = &quot;html&quot;)</code></pre>
-<pre><code>## &lt;!-- html table generated in R 3.2.1 by xtable 1.8-0 package --&gt;
-## &lt;!-- Wed Dec 16 20:51:52 2015 --&gt;
-## &lt;table border=1&gt;
-## &lt;tr&gt; &lt;th&gt;  &lt;/th&gt; &lt;th&gt; Grand_Total_Steps &lt;/th&gt; &lt;th&gt; Average_Steps &lt;/th&gt; &lt;th&gt; Median_Steps &lt;/th&gt;  &lt;/tr&gt;
-##   &lt;tr&gt; &lt;td align=&quot;right&quot;&gt; Original data (excl days with zero steps) &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 570608.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 10766.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 10765.00 &lt;/td&gt; &lt;/tr&gt;
-##   &lt;tr&gt; &lt;td align=&quot;right&quot;&gt; Imputed data &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 582382.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 9547.00 &lt;/td&gt; &lt;td align=&quot;right&quot;&gt; 10395.00 &lt;/td&gt; &lt;/tr&gt;
-##    &lt;/table&gt;</code></pre>
+<pre class="r"><code># xt3 &lt;- xtable(summaryData3)
+# print(xt3, type = &quot;html&quot;)</code></pre>
 </div>
 <div id="compare-the-pattern-of-activity-between-weekdays-and-weekends-with-imputed-data" class="section level3">
 <h3>Compare the pattern of activity between weekdays and weekends with imputed data</h3>

@@ -5,28 +5,29 @@ date: "15 December 2015"
 output: html_document
 keep_md: true
 ---
-#Background#
+#Background
 This is submitted as part of the Reproducible Research unit of the Coursera Data Science series. The assignment makes use of data from a personal activity monitoring device which collects data at 5 minute intervals throughout the day. The data consists of two months of data from an anonymous individual collected during the months of October and November 2012. Further information is provided about the [Fitbit][1], [Nike Fuelband][2] and [Jawbone up][3].  
 
-##Data source##
+##Data source
 The data are available at:  
 <https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip>  
 or from the course GitHub site.  
 
-##Code Book##
+##Code Book
 The dataset is stored in a comma-separated-value (csv) file. There are a total of 17,568 observations.  
 The variables included in this dataset are:  
 * steps: number of steps taking in a 5-min interval (missing values coded as NA)  
 * date: date on which the measurement was taken in YYYY-MM-DD format  
-* interval: identifier for the 5-minute interval in which measurement was taken  
+* interval: identifier for the 5-minute interval in which measurement was taken.
+
 ---
 
-#Analysis#
+#Analysis
 
-##Purpose##
+##Purpose
 The aim of the analysis is to determine if there are recognisable differences between weekday and weekend daily patterns of activity, imputing missing data as appropriate.  
 
-##Structure##
+##Structure
 The steps in the analysis are:  
 1.      Downloading and unzipping the csv file (which may be omitted)  
 2.      Reading the file into R  
@@ -49,75 +50,16 @@ Then load the packages required for the analysis (installing them if necessary):
 
 ```r
 library(lattice)
-```
-
-```
-## Warning: package 'lattice' was built under R version 3.2.2
-```
-
-```r
 library(dplyr)
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.2.2
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 library(stringr)
-```
-
-```
-## Warning: package 'stringr' was built under R version 3.2.2
-```
-
-```r
 library(lubridate)
-```
-
-```
-## Warning: package 'lubridate' was built under R version 3.2.2
-```
-
-```r
 library(xtable)
-```
-
-```
-## Warning: package 'xtable' was built under R version 3.2.2
-```
-
-```r
 library(ggplot2)
-```
-
-```
-## Warning: package 'ggplot2' was built under R version 3.2.2
-```
-
-```r
 library(reshape2)
-```
-
-```
-## Warning: package 'reshape2' was built under R version 3.2.2
 ```
 ---
 
-###Download and unzip the csv file###
+###Download and unzip the csv file
 
 ```r
 # dataset_url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
@@ -128,7 +70,7 @@ library(reshape2)
 
 The date of download is included in the name of the zip file for future reference.
 
-###Read in the data and check###
+###Read in the data and check
 
 ```r
 data <- tbl_df(read.csv("activity.csv", stringsAsFactors = FALSE))
@@ -170,7 +112,7 @@ round(sum(data$steps == 0, na.rm = TRUE)/nrow(data[!is.na(data$steps), ]), 3) * 
 
 There were no (obvious) duplicates or negative numbers of steps (data not shown) but there is a significant zero bias.  
 
-###Explore the data###
+###Explore the data
 Look for outliers, NAs, zeroes and the general distribution of the data:
 
 ```r
@@ -191,7 +133,7 @@ Mydotplot <- function(DataSelected){
 Mydotplot(data$steps)
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
+![plot of chunk Figure 1](figure/Figure 1-1.png) 
 
 Note the wide range, skew, missing values and preponderance of zeroes:  
 
@@ -203,7 +145,7 @@ histogram(data$steps,
           main = list(label = "Frequency Histogram", cex = 1.75))
 ```
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
+![plot of chunk Figure 2](figure/Figure 2-1.png) 
 
 The data appear to be over-distributed. This suggests that a log transformation (adding 1 in view of zeroes) may be useful:  
 
@@ -212,7 +154,7 @@ plot(log10(data$steps +1) ~ as.POSIXct(data$date), xlab = "Date")
 title(main = "Log transformation")
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
+![plot of chunk Figure 3](figure/Figure 3-1.png) 
 
 or a square root transformation:  
 
@@ -221,11 +163,11 @@ plot(sqrt(data$steps) ~ as.POSIXct(data$date), xlab = "Date")
 title(main = "Square root transformation")
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
+![plot of chunk Figure 4](figure/Figure 4-1.png) 
 
 However there are problems with both approaches, so I opted to leave the data untransformed.
 
-###Process the data###
+###Process the data
 Create new variables for Date, day of week (Mon-Sun) and weekday/weekend:  
 
 ```r
@@ -248,8 +190,8 @@ data$date.time <- ymd_hm(data$date.time)
 
 date.time is now class POSIXct; however, for the purposes of the analysis interval suffices.
 
-###Plot and calculate various parameters###
-Plot the total daily steps:  
+###Plot and calculate various parameters
+Plot the total daily steps (*this is a histogram, type 'h'*):  
 
 ```r
 dailyData <- group_by(data, Date) %>%
@@ -259,7 +201,7 @@ dailyData <- group_by(data, Date) %>%
              main = "Total Daily Steps (using original data)")
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png) 
+![plot of chunk Figure 5](figure/Figure 5-1.png) 
 
 Note that some days have no readings. It appears as if the monitors failed on those days so they have been excluded from the analysis for the time being. This "missingness" is an odd pattern, apparently covering whole 24 hour periods. 
 
@@ -284,17 +226,8 @@ print(summaryData1)
 ```
 
 ```r
-xt1 <- xtable(summaryData1)
-print(xt1, type = "html")
-```
-
-```
-## <!-- html table generated in R 3.2.1 by xtable 1.8-0 package -->
-## <!-- Wed Dec 16 21:48:03 2015 -->
-## <table border=1>
-## <tr> <th>  </th> <th> Grand_Total_Steps </th> <th> Average_Steps </th> <th> Median_Steps </th>  </tr>
-##   <tr> <td align="right"> 1 </td> <td align="right"> 570608 </td> <td align="right"> 10766.00 </td> <td align="right"> 10765.00 </td> </tr>
-##    </table>
+# xt1 <- xtable(summaryData1)
+# print(xt1, type = "html")
 ```
 
 Calculate and plot the mean number of steps per interval:  
@@ -308,7 +241,7 @@ qplot(interval, Mean_Steps, data = interval_Data,
       main = "Time series of mean steps per 5 min interval over 24 hours")
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
+![plot of chunk Figure 6](figure/Figure 6-1.png) 
 
 Find time interval with highest mean number of steps and corresponding time (24h clock):  
 
@@ -323,23 +256,19 @@ which(interval_Data$Mean_Steps == max(interval_Data$Mean_Steps))
 ```r
 max_activity <- interval_Data$interval[which(interval_Data$Mean_Steps == 
                                                      max(interval_Data$Mean_Steps))]
-print(str_pad(max_activity, width = 4, "left", pad = "0"))
+max_activity <- (str_pad(max_activity, width = 4, "left", pad = "0"))
 ```
 
-```
-## [1] "0835"
-```
+The time of maximum activity is 0835.
 
-###Impute missing values###
+###Impute missing values
 Number of missing values (NAs):
 
 ```r
-sum(is.na(data$steps))
+tot_nas <- sum(is.na(data$steps))
 ```
 
-```
-## [1] 2304
-```
+There are 2304 missing values.
 
 Pattern of missing values:
 
@@ -350,7 +279,7 @@ barplot(dailyNAs$NAs, xlab = "Consecutive Days", ylab = "Number of NAs")
 title(main = "Pattern of Missing Values by Day")
 ```
 
-![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png) 
+![plot of chunk Figure 7](figure/Figure 7-1.png) 
 
 As noted previously the pattern indicates that all readings for certain days are missing. This makes it difficult to use various forms of imputation (such as "nearest neighbour" or "next available" formulae) and suggests that profiling of similar days should be used.
 
@@ -390,7 +319,7 @@ unique(missing_data$DayOfWeek)
 ```
 
 To identify if there is a discernible pattern in different days:
-![plot of chunk unnamed-chunk-20](figure/unnamed-chunk-20-1.png) 
+![plot of chunk Figure 8](figure/Figure 8-1.png) 
 
 No obvious pattern is apparent. However a time series may be more helpful.  
 
@@ -412,7 +341,7 @@ Day_Of_Week1 <- ts(wide_DayOfWeek1)
 plot(Day_Of_Week1)
 ```
 
-![plot of chunk unnamed-chunk-22](figure/unnamed-chunk-22-1.png) 
+![plot of chunk Figure 9](figure/Figure 9-1.png) 
 
 There does not appear to be an obvious pattern.
 
@@ -423,7 +352,7 @@ Week_Day1 <- ts(wide_WeekDay1)
 plot(Week_Day1)
 ```
 
-![plot of chunk unnamed-chunk-23](figure/unnamed-chunk-23-1.png) 
+![plot of chunk Figure 10](figure/Figure 10-1.png) 
 
 There appears to be a difference (ie later onset and cessation of activity during weekends and more even distribution). This suggests that profiles of activity for weekdays (M-F) and weekends (S-S) could be used for imputation of missing values.
 
@@ -460,7 +389,7 @@ data_imputed <- mutate(data_imputed,
         rename(interval = interval.x)
 ```
 
-###Re-calculate the parameters and re-plot with the updated data###
+###Re-calculate the parameters and re-plot with the updated data
 Re-plot the total daily steps with new dataset:  
 
 ```r
@@ -471,7 +400,7 @@ dailyData <- group_by(data_imputed, Date) %>%
              main = "Total Daily Steps (using imputed data)")
 ```
 
-![plot of chunk unnamed-chunk-27](figure/unnamed-chunk-27-1.png) 
+![plot of chunk Figure 11](figure/Figure 11-1.png) 
 
 There are still a significant number of days with suspiciously low numbers of steps. In the absence of an explanation for this the data have not been excluded.
 
@@ -495,17 +424,8 @@ print(summaryData2)
 ```
 
 ```r
-xt2 <- xtable(summaryData2)
-print(xt2, type = "html")
-```
-
-```
-## <!-- html table generated in R 3.2.1 by xtable 1.8-0 package -->
-## <!-- Wed Dec 16 21:48:04 2015 -->
-## <table border=1>
-## <tr> <th>  </th> <th> Grand_Total_Steps </th> <th> Average_Steps </th> <th> Median_Steps </th>  </tr>
-##   <tr> <td align="right"> 1 </td> <td align="right"> 582382.00 </td> <td align="right"> 9547.00 </td> <td align="right"> 10395.00 </td> </tr>
-##    </table>
+# xt2 <- xtable(summaryData2)
+# print(xt2, type = "html")
 ```
 
 Compare grand total, mean and median steps with original and imputed data:  
@@ -526,21 +446,11 @@ print(summaryData3)
 ```
 
 ```r
-xt3 <- xtable(summaryData3)
-print(xt3, type = "html")
+# xt3 <- xtable(summaryData3)
+# print(xt3, type = "html")
 ```
 
-```
-## <!-- html table generated in R 3.2.1 by xtable 1.8-0 package -->
-## <!-- Wed Dec 16 21:48:04 2015 -->
-## <table border=1>
-## <tr> <th>  </th> <th> Grand_Total_Steps </th> <th> Average_Steps </th> <th> Median_Steps </th>  </tr>
-##   <tr> <td align="right"> Original data (excl days with zero steps) </td> <td align="right"> 570608.00 </td> <td align="right"> 10766.00 </td> <td align="right"> 10765.00 </td> </tr>
-##   <tr> <td align="right"> Imputed data </td> <td align="right"> 582382.00 </td> <td align="right"> 9547.00 </td> <td align="right"> 10395.00 </td> </tr>
-##    </table>
-```
-
-###Compare the pattern of activity between weekdays and weekends with imputed data###
+###Compare the pattern of activity between weekdays and weekends with imputed data
 Plot using time series function:
 
 ```r
@@ -550,7 +460,7 @@ Weekend_Activity_Comparison <- ts(wide_WeekDay2)
 plot(Weekend_Activity_Comparison)
 ```
 
-![plot of chunk unnamed-chunk-30](figure/unnamed-chunk-30-1.png) 
+![plot of chunk Figure 12](figure/Figure 12-1.png) 
 
 The pattern seen with the original data is reproduced with the inclusion of imputed data. Activity at the weekends begins later, is more consistent and ends later.
 
