@@ -5,29 +5,29 @@ date: "15 December 2015"
 output: html_document
 keep_md: true
 ---
-#Background
+# Background
 This is submitted as part of the Reproducible Research unit of the Coursera Data Science series. The assignment makes use of data from a personal activity monitoring device which collects data at 5 minute intervals throughout the day. The data consists of two months of data from an anonymous individual collected during the months of October and November 2012. Further information is provided about the [Fitbit][1], [Nike Fuelband][2] and [Jawbone up][3].  
 
-##Data source
+## Data source
 The data are available at:  
 <https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip>  
 or from the course GitHub site.  
 
-##Code Book
+## Code Book
 The dataset is stored in a comma-separated-value (csv) file. There are a total of 17,568 observations.  
 The variables included in this dataset are:  
 * steps: number of steps taking in a 5-min interval (missing values coded as NA)  
 * date: date on which the measurement was taken in YYYY-MM-DD format  
 * interval: identifier for the 5-minute interval in which measurement was taken.
 
----
+================================================================================
 
-#Analysis
+# Analysis
 
-##Purpose
+## Purpose
 The aim of the analysis is to determine if there are recognisable differences between weekday and weekend daily patterns of activity, imputing missing data as appropriate.  
 
-##Structure
+## Structure
 The steps in the analysis are:  
 1.      Downloading and unzipping the csv file (which may be omitted)  
 2.      Reading the file into R  
@@ -55,9 +55,10 @@ library(xtable)
 library(ggplot2)
 library(reshape2)
 ```
----
 
-###Download and unzip the csv file
+================================================================================
+
+### Download and unzip the csv file
 ```{r, echo = TRUE}
 # dataset_url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 # fileDest <- sprintf("activity_%s.zip", format(Sys.time(),"%Y_%m_%d_%H_%M_%S"))
@@ -67,7 +68,7 @@ library(reshape2)
 
 The date of download is included in the name of the zip file for future reference.
 
-###Read in the data and check
+### Read in the data and check
 ```{r, echo = TRUE}
 data <- tbl_df(read.csv("activity.csv", stringsAsFactors = FALSE))
 str(data)
@@ -82,7 +83,7 @@ round(sum(data$steps == 0, na.rm = TRUE)/nrow(data[!is.na(data$steps), ]), 3) * 
 
 There were no (obvious) duplicates or negative numbers of steps (data not shown) but there is a significant zero bias.  
 
-###Explore the data
+### Explore the data
 Look for outliers, NAs, zeroes and the general distribution of the data:
 ```{r Figure 1, echo = TRUE}
 Mydotplot <- function(DataSelected){
@@ -125,7 +126,7 @@ title(main = "Square root transformation")
 
 However there are problems with both approaches, so I opted to leave the data untransformed.
 
-###Process the data
+### Process the data
 Create new variables for Date, day of week (Mon-Sun) and weekday/weekend:  
 ```{r, echo = TRUE}
 data <- mutate(data, Date = as.Date(date)) %>%
@@ -146,7 +147,7 @@ data$date.time <- ymd_hm(data$date.time)
 
 date.time is now class POSIXct; however, for the purposes of the analysis interval suffices.
 
-###Plot and calculate various parameters
+### Plot and calculate various parameters
 Plot the total daily steps (*this is a histogram, type 'h'*):  
 ```{r Figure 5, echo = TRUE}
 dailyData <- group_by(data, Date) %>%
@@ -191,7 +192,7 @@ max_activity <- (str_pad(max_activity, width = 4, "left", pad = "0"))
 
 The time of maximum activity is `r max_activity`.
 
-###Impute missing values
+### Impute missing values
 Number of missing values (NAs):
 ```{r, echo = TRUE}
 tot_nas <- sum(is.na(data$steps))
@@ -291,7 +292,7 @@ data_imputed <- mutate(data_imputed,
         rename(interval = interval.x)
 ```
 
-###Re-calculate the parameters and re-plot with the updated data
+### Re-calculate the parameters and re-plot with the updated data
 Re-plot the total daily steps with new dataset:  
 ```{r Figure 11, echo = TRUE}
 dailyData <- group_by(data_imputed, Date) %>%
@@ -324,9 +325,42 @@ print(summaryData3)
 # print(xt3, type = "html")
 ```
 
-###Compare the pattern of activity between weekdays and weekends with imputed data
-Plot using time series function:
+
+**Data** | **Mean** | **Median** 
+-------|----------|----------------
+Original | `r as.integer(summaryData1[2])` | `r as.integer(summaryData1[3])` 
+Imputed | `r as.integer(summaryData2[2])` | `r as.integer(summaryData2[3])` 
+
+Imputation has had a greater effect on the mean than the median.
+
+### Compare the pattern of activity between original and imputed data
+Compare using histograms of original data:
 ```{r Figure 12, echo = TRUE}
+stepsData1 <- group_by(data, Date) %>%
+        summarise(Total_Steps = sum(steps, na.rm = TRUE))
+stepsHistogram1<-ggplot(stepsData1, aes(x = Total_Steps)) +
+        geom_histogram() +
+        xlab("Total number of steps") +
+        ylab("Number of days") +
+        ggtitle("Original data")
+print(stepsHistogram1)
+```
+
+and imputed data:
+```{r Figure 13, echo = TRUE}
+stepsData2 <- group_by(data_imputed, Date) %>%
+        summarise(Total_Steps = sum(steps_imputed))
+stepsHistogram2<-ggplot(stepsData2, aes(x = Total_Steps)) +
+        geom_histogram() +
+        xlab("Total number of steps") +
+        ylab("Number of days") +
+        ggtitle("Imputed data")
+print(stepsHistogram2)
+```
+
+### Compare the pattern of activity between weekdays and weekends with imputed data
+Plot using time series function:
+```{r Figure 14, echo = TRUE}
 wide_WeekDay2 <- acast(data_imputed, interval ~ WeekDay,
                        value.var = "steps_imputed", fun.aggregate = sum)
 Weekend_Activity_Comparison <- ts(wide_WeekDay2)

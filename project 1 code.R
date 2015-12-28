@@ -1,3 +1,8 @@
+sessionInfo()
+setwd("C:\\Users\\he49794\\Work\\Statistics Resources\\Coursera\\Reproducible Research\\Project 1")
+# store path to current working directory
+# initial_wd <- getwd()
+
 # create a new directory for the project and set as working directory
 if(!file.exists("Activity_Data")) dir.create("Activity_Data")
 setwd("./Activity_Data")
@@ -8,9 +13,9 @@ fileDest <- sprintf("activity_%s.zip", format(Sys.time(),"%Y_%m_%d_%H_%M_%S"))
 download.file(dataset_url, fileDest, mode = "wb", method = "libcurl")
 unzip(fileDest)
 
+library(dplyr)
 # read in and check the data
 data <- tbl_df(read.csv("activity.csv"))
-head(data)
 str(data)
 
 # percentage of complete cases
@@ -58,7 +63,6 @@ plot(sqrt(data$steps) ~ data$date)
 title(main = "Square root transformation")
 
 # create new variables for Date, day of week and weekday/weekend
-library(dplyr)
 data <- mutate(data, Date = as.Date(date)) %>%
         mutate(DayOfWeek = factor(weekdays(Date),
                 levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
@@ -71,15 +75,6 @@ data$time <- str_pad(data$interval, width = 4, "left", pad = "0")
 data$date.time <- paste(data$date, data$time, sep = " ")
 library(lubridate)
 data$date.time <- ymd_hm(data$date.time)
-data <- mutate(data, sequence = 1:nrow(data))
-
-
-
-
-
-
-
-
 
 # plot the total daily steps
 dailyData <- group_by(data, Date) %>%
@@ -95,7 +90,7 @@ summaryData1 <- group_by(data, Date) %>%
         summarise(Grand_Total_Steps = sum(Total_Steps),
                   Average_Steps = round(mean(Total_Steps), 0),
                   Median_Steps = round(median(Total_Steps), 0))
-# print(summaryData1)
+print(summaryData1)
 library(xtable)
 xt1 <- xtable(summaryData1)
 print(xt1, type = "html")
@@ -209,6 +204,7 @@ print(xt2, type = "html")
 # compare grand total, mean and median steps with original and imputed data
 summaryData3 <- rbind(summaryData1, summaryData2)
 row.names(summaryData3) <- c("Original data (excl days with zero steps)", "Imputed data")
+print(summaryData3)
 xt3 <- xtable(summaryData3)
 print(xt3, type = "html")
 
@@ -221,5 +217,27 @@ wide_WeekDay2 <- acast(data_imputed, interval ~ WeekDay,
 Weekend_Activity_Comparison <- ts(wide_WeekDay2)
 plot(Weekend_Activity_Comparison)
 
+# histograms
+stepsData1 <- group_by(data, Date) %>%
+        summarise(Total_Steps = sum(steps, na.rm = TRUE))
+stepsData2 <- group_by(data_imputed, Date) %>%
+        summarise(Total_Steps = sum(steps_imputed))
+par(mfrow = c(2, 1))
+stepsHistogram1<-ggplot(stepsData1, aes(x = Total_Steps)) +
+        geom_histogram() +
+        xlab("Total number of steps") +
+        ylab("Number of days") +
+        ggtitle("Original data")
+print(stepsHistogram1)
+stepsHistogram2<-ggplot(stepsData2, aes(x = Total_Steps)) +
+        geom_histogram() +
+        xlab("Total number of steps") +
+        ylab("Number of days") +
+        ggtitle("Imputed data")
+print(stepsHistogram2)
+par(mfrow = c(1, 1))
+
+
 # on completion, reset wd to initial wd
 setwd("../")
+
